@@ -10,3 +10,5 @@ __pycache__/
 
 # Ignorar estáticos generados
 /staticfiles/
+
+*.db
