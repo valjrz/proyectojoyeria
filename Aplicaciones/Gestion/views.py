@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
 from django.utils.crypto import get_random_string
+from django.contrib.auth.decorators import login_required, user_passes_test
+
 
 from . models import Productos
 from . models import Categoria
@@ -14,12 +16,19 @@ from datetime import datetime
 from django.contrib import messages 
 
 # Create your views here.
+# Función para verificar si el usuario es administrador
+def es_admin(user):
+    return user.is_staff
 
 #vistas productos
+@login_required
+@user_passes_test(es_admin)
 def gestionproductos(request): #request es una peticion modelo cliente servidor
     productos = Productos.objects.all() #listado de todos los productos 
     return render(request, "gestionproductos.html", {"productos":productos})
 
+@login_required
+@user_passes_test(es_admin)
 def registrarProducto(request):
     codigo=request.POST['codigo']
     nombre=request.POST['nombre']
@@ -27,20 +36,26 @@ def registrarProducto(request):
     imagen = request.FILES.get('imagen', None)
     precio = request.POST['precio']
 
-    categoria = Categoria.objects.get(codigo=categoria_id)
+    categoria = get_object_or_404(Categoria, codigo=categoria_id)
     productos = Productos.objects.create(
         codigo=codigo, nombre=nombre, categoria=categoria, imagen=imagen, precio=precio)
     messages.success(request,'Producto Registrado!')
     return redirect('/')
 
+@login_required
+@user_passes_test(es_admin)
 def vistaAgregarProducto(request):
     categorias = Categoria.objects.all()
     return render(request, "agregarProductos.html", {"categorias": categorias})
 
+@login_required
+@user_passes_test(es_admin)
 def edicionProducto(request,codigo):
-    productos = Productos.objects.get(codigo=codigo)
+    productos = get_object_or_404(Productos, codigo=codigo)
     return render(request, "edicionProducto.html", {"productos":productos})
 
+@login_required
+@user_passes_test(es_admin)
 def editarProducto(request):
     codigo=request.POST['codigo']
     nombre=request.POST['nombre']
@@ -48,7 +63,7 @@ def editarProducto(request):
     imagen = request.FILES.get('imagen', None)
     precio = request.POST['precio']
 
-    productos = Productos.objects.get(codigo=codigo)
+    productos = get_object_or_404(Productos, codigo=codigo)
     productos.nombre= nombre
     productos.tipo = tipo
     productos.precio = precio
@@ -58,18 +73,23 @@ def editarProducto(request):
     messages.success(request,'Producto Actualizado!')
     return redirect('/')
 
-
+@login_required
+@user_passes_test(es_admin)
 def eliminacionProducto(request,codigo):
-    productos = Productos.objects.get(codigo=codigo)
+    productos = get_object_or_404(Productos, codigo=codigo)
     productos.delete() 
     messages.success(request,'Producto Eliminado!')
     return redirect('/')
 
 #vistas categorias 
+@login_required
+@user_passes_test(es_admin)
 def gestionCategorias(request):
     categorias = Categoria.objects.all()
     return render(request, "gestionCategorias.html", {"categorias": categorias})
 
+@login_required
+@user_passes_test(es_admin)
 def registrarCategoria(request):
     nombre = request.POST['nombre']
     codigo=request.POST['codigo']
@@ -79,25 +99,34 @@ def registrarCategoria(request):
     messages.success(request, 'Categoría Registrada!')
     return redirect('/categorias')
 
+@login_required
+@user_passes_test(es_admin)
 def vistaAgregarCategoria(request):
     return render(request, 'agregarCategoria.html')
 
+@login_required
+@user_passes_test(es_admin)
 def edicionCategoria(request, codigo):
-    categoria = Categoria.objects.get(codigo=codigo)
+    categoria = get_object_or_404(Categoria, codigo=codigo)
     return render(request, "edicionCategoria.html", {"categoria": categoria})
 
-
+@login_required
+@user_passes_test(es_admin)
 def eliminacionCategoria(request,codigo):
-    categoria = Categoria.objects.get(codigo=codigo)
+    categoria = get_object_or_404(Categoria, codigo=codigo)
     categoria.delete() 
     messages.success(request,'Categoria Eliminada!')
     return redirect('/categorias')
 
 #vistas clientes 
+@login_required
+@user_passes_test(es_admin)
 def gestionClientes(request):
     clientes = Clientes.objects.all()
     return render(request, "gestionClientes.html",{"clientes" : clientes})
 
+@login_required
+@user_passes_test(es_admin)
 def vistaAgregarCliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -109,7 +138,8 @@ def vistaAgregarCliente(request):
         form = ClienteForm()
     return render(request, 'agregarCliente.html', {'form': form})
      
-
+@login_required
+@user_passes_test(es_admin)
 def edicionCliente(request,codigo):
     cliente = get_object_or_404(Clientes, codigo=codigo)
 
@@ -124,6 +154,8 @@ def edicionCliente(request,codigo):
 
     return render(request, 'edicionCliente.html', {'form': form})
 
+@login_required
+@user_passes_test(es_admin)
 def eliminacionCliente(request, codigo):
     cliente = get_object_or_404(Clientes, codigo=codigo)
     cliente.delete()
@@ -131,11 +163,14 @@ def eliminacionCliente(request, codigo):
     return redirect('/clientes')
 
 #vistas pedidos 
-
+@login_required
+@user_passes_test(es_admin)
 def gestionPedidos(request):
     pedidos = Pedidos.objects.all()
     return render(request, "gestionPedidos.html", {"pedidos": pedidos})
 
+@login_required
+@user_passes_test(es_admin)
 def vistaAgregarPedido(request):
     if request.method == 'POST':
         # Obtener datos del formulario
@@ -164,7 +199,8 @@ def vistaAgregarPedido(request):
         'estados': estados
     })
 
-
+@login_required
+@user_passes_test(es_admin)
 def edicionPedido(request, codigo):
     pedido = get_object_or_404(Pedidos, codigo=codigo)
 
@@ -190,7 +226,8 @@ def edicionPedido(request, codigo):
          'estados': estados,
     })
 
-    
+@login_required
+@user_passes_test(es_admin)
 def eliminacionPedido(request,codigo):
     pedido = get_object_or_404(Pedidos, codigo=codigo)
     pedido.delete()
@@ -201,7 +238,7 @@ def home_ecommerce(request):
     return render(request, 'home_ecommerce.html')
 
 def productos_por_categoria(request, codigo):
-    categoria = Categoria.objects.get(codigo=codigo)
+    categoria = get_object_or_404(Categoria, codigo=codigo)
     productos = Productos.objects.filter(categoria=categoria)
     return render(request, "productos_por_categoria.html", {
         "categoria": categoria,
@@ -240,8 +277,6 @@ def registro(request):
 
     return render(request, 'registro.html')
 
-
-
 class LoginClienteView(LoginView):
     template_name = 'login.html'  #personalizado
 
@@ -266,7 +301,7 @@ def ver_carrito(request):
 
     for codigo, cantidad in carrito.items():
         try:
-            producto = Productos.objects.get(codigo=codigo)
+            producto = get_object_or_404(Productos, codigo=codigo)
             subtotal = producto.precio * cantidad
             productos.append({
                 'producto': producto,
@@ -283,7 +318,7 @@ def ver_carrito(request):
     })
 
 
-
+@login_required
 def pagar_carrito(request):
     if request.method == 'POST':
         carrito = request.session.get('carrito', {})
