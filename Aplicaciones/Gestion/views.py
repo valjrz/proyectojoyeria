@@ -1,21 +1,20 @@
+# Imports estándar
+import random
+# Imports de Django
 from django.shortcuts import render,redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required, user_passes_test
-
-
+from django.contrib import messages
+# Imports locales
 from . models import Productos
 from . models import Categoria
 from . models import Clientes
+from . models import Pedidos
 from . forms import ClienteForm
-from . models import Pedidos 
-import random
-from datetime import datetime
-from django.contrib import messages 
 
-# Create your views here.
 # Función para verificar si el usuario es administrador
 def es_admin(user):
     return user.is_staff
@@ -24,7 +23,7 @@ def es_admin(user):
 @login_required
 @user_passes_test(es_admin)
 def gestionproductos(request): #request es una peticion modelo cliente servidor
-    productos = Productos.objects.all() #listado de todos los productos 
+    productos = Productos.objects.all() #listado de todos los productos
     return render(request, "gestionproductos.html", {"productos":productos})
 
 @login_required
@@ -77,11 +76,11 @@ def editarProducto(request):
 @user_passes_test(es_admin)
 def eliminacionProducto(request,codigo):
     productos = get_object_or_404(Productos, codigo=codigo)
-    productos.delete() 
+    productos.delete()
     messages.success(request,'Producto Eliminado!')
     return redirect('/')
 
-#vistas categorias 
+#vistas categorias
 @login_required
 @user_passes_test(es_admin)
 def gestionCategorias(request):
@@ -95,7 +94,7 @@ def registrarCategoria(request):
     codigo=request.POST['codigo']
 
     Categoria.objects.create(nombre=nombre, codigo=codigo)
- 
+
     messages.success(request, 'Categoría Registrada!')
     return redirect('/categorias')
 
@@ -114,11 +113,11 @@ def edicionCategoria(request, codigo):
 @user_passes_test(es_admin)
 def eliminacionCategoria(request,codigo):
     categoria = get_object_or_404(Categoria, codigo=codigo)
-    categoria.delete() 
+    categoria.delete()
     messages.success(request,'Categoria Eliminada!')
     return redirect('/categorias')
 
-#vistas clientes 
+#vistas clientes
 @login_required
 @user_passes_test(es_admin)
 def gestionClientes(request):
@@ -137,7 +136,7 @@ def vistaAgregarCliente(request):
     else:
         form = ClienteForm()
     return render(request, 'agregarCliente.html', {'form': form})
-     
+
 @login_required
 @user_passes_test(es_admin)
 def edicionCliente(request,codigo):
@@ -162,7 +161,7 @@ def eliminacionCliente(request, codigo):
     messages.success(request, 'Cliente eliminado')
     return redirect('/clientes')
 
-#vistas pedidos 
+#vistas pedidos
 @login_required
 @user_passes_test(es_admin)
 def gestionPedidos(request):
@@ -290,7 +289,7 @@ def agregar_al_carrito(request, codigo):
         carrito[codigo] = 1
 
     request.session['carrito'] = carrito
-    return redirect('ver_carrito') 
+    return redirect('ver_carrito')
 
 
 
@@ -310,7 +309,7 @@ def ver_carrito(request):
             })
             total += subtotal
         except Productos.DoesNotExist:
-            pass  
+            pass
 
     return render(request, 'carrito.html', {
         'productos': productos,
@@ -352,10 +351,10 @@ def pagar_carrito(request):
 
 def eliminar_del_carrito(request, codigo):
     carrito = request.session.get('carrito', {})
-    
+
     if codigo in carrito:
         del carrito[codigo]
         request.session['carrito'] = carrito
         messages.success(request, 'Producto eliminado del carrito.')
-    
+
     return redirect('ver_carrito')
