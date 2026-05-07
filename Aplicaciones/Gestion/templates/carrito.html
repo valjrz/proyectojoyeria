@@ -1,59 +1,156 @@
 {% extends "base.html" %}
-{% block title %}Carrito{% endblock %}
+{% block title %}Mi Carrito{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Tu carrito de compras</h2>
+  <h2 class="mb-4">Mi Carrito</h2>
 
   {% if productos %}
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <thead class="table-dark">
-          <tr>
-            <th>Producto</th>
-            <th>Imagen</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Subtotal</th>
-            <th>Eliminar</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in productos %}
-            <tr>
-              <td>{{ item.producto.nombre }}</td>
-              <td>
-                <div class="d-flex align-items-center">
-                  {% if item.producto.imagen %}
-                    <img src="{{ item.producto.imagen.url }}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 10px;">
-                  {% endif %}
-                </div>
-              </td>
-              <td>{{ item.cantidad }}</td>
-              <td>${{ item.producto.precio }}</td>
-              <td>${{ item.subtotal }}</td>
-              <td><form method="post" action="{% url 'eliminar_del_carrito' item.producto.codigo %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
-              </form>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    <div class="row">
+      <!-- COLUMNA IZQUIERDA: PRODUCTOS -->
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Cantidad</th>
+                  <th>Subtotal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in productos %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      {% if item.producto.imagen %}
+                      <img src="{{ item.producto.imagen.url }}" 
+                           style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+                      {% endif %}
+                      <div>
+                        <strong>{{ item.producto.nombre }}</strong><br>
+                        <small class="text-muted">{{ item.producto.categoria.nombre }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="align-middle">${{ item.producto.precio }}</td>
+                  <td class="align-middle">
+                    <div class="d-flex align-items-center" style="gap: 10px;">
+                      <a href="{% url 'modificar_cantidad_carrito' item.producto.codigo 'disminuir' %}" 
+                         class="btn btn-sm btn-outline-secondary">-</a>
+                      <span>{{ item.cantidad }}</span>
+                      <a href="{% url 'modificar_cantidad_carrito' item.producto.codigo 'aumentar' %}" 
+                         class="btn btn-sm btn-outline-secondary">+</a>
+                    </div>
+                  </td>
+                  <td class="align-middle"><strong>${{ item.subtotal }}</strong></td>
+                  <td class="align-middle">
+                    <form method="post" action="{% url 'eliminar_del_carrito' item.producto.codigo %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm d-flex align-items-center" style="color: #dc3545; border: none;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-    <h4 class="text-end">Total: ${{ total }}</h4>
+      <!-- COLUMNA DERECHA: RESUMEN -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header" style="background-color: #DFD3C3; font-weight: 600;">
+            Resumen del Pedido
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Subtotal</span>
+              <span>${{ total }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-3">
+              <strong style="font-size: 1.2rem;">Total</strong>
+              <strong style="font-size: 1.2rem; color: #8D493A;">${{ total }}</strong>
+            </div>
 
-    <div class="text-center mt-4">
-      <form method="post" action="{% url 'pagar_carrito' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-success px-5">Pagar</button>
-      </form>
+            <form method="post" action="{% url 'pagar_carrito' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn w-100 py-2" 
+                      style="background-color: #109b66; color: white; font-weight: 600; border-radius: 8px;">
+                Pagar
+              </button>
+            </form>
+
+            <a href="{% url 'home_ecommerce' %}" class="btn btn-link w-100 mt-2" style="color: #8D493A;">
+              ← Seguir comprando
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
   {% else %}
-    <p class="text-center">Tu carrito está vacío.</p>
+    <div class="text-center py-5">
+      <h4 class="text-muted">Tu carrito está vacío</h4>
+      <p class="text-muted">Agrega productos para comenzar tu compra</p>
+      <a href="{% url 'home_ecommerce' %}" class="btn btn-primary mt-3" style="background-color: #8D493A; border: none;">
+        Ver productos
+      </a>
+    </div>
   {% endif %}
 </div>
+
+<style>
+  .card {
+    border: none;
+    border-radius: 12px;
+  }
+
+  .table th {
+    border-top: none;
+    color: #666;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+  }
+
+  .table td {
+    vertical-align: middle;
+    padding: 20px 12px;
+  }
+
+  .btn-outline-secondary {
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+    padding: 15px 20px;
+  }
+</style>
 {% endblock %}

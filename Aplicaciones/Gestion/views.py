@@ -252,8 +252,18 @@ def registro(request):
         nombre = request.POST['nombre']
         apellidopaterno = request.POST['apellidopaterno']
         apellidomaterno = request.POST['apellidomaterno']
-        correo = request.POST['correo']
         telefono = request.POST['telefono']
+        
+        # VALIDAR SI EL CORREO YA EXISTE
+        if Clientes.objects.filter(correo=correo).exists():
+            messages.error(request, 'Este correo ya está registrado. Por favor usa otro correo.')
+            return redirect('registro')
+        
+        # VALIDAR SI EL USERNAME YA EXISTE
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Este nombre de usuario ya existe. Por favor elige otro.')
+            return redirect('registro')
+        
         # Crear usuario
         user = User.objects.create_user(username=username, email=correo, password=password)
         # Generar código único
@@ -272,7 +282,8 @@ def registro(request):
 
         # Iniciar sesión
         login(request, user)
-        return redirect('login')
+        messages.success(request, '¡Registro exitoso! Bienvenido a Aura Joyería.')
+        return redirect('home_ecommerce')
 
     return render(request, 'registro.html')
 
@@ -332,19 +343,31 @@ def pagar_carrito(request):
             messages.error(request, 'Debes estar registrado como cliente para realizar un pedido.')
             return redirect('login')
 
-        # Genera codigou para pedido
+        # Calcular total
+        total = 0
+        for codigo, cantidad in carrito.items():
+            try:
+                producto = Productos.objects.get(codigo=codigo)
+                total += float(producto.precio) * cantidad
+            except Productos.DoesNotExist:
+                pass
+
+        # Genera codigo para pedido
         codigo = f"PD{random.randint(1000, 9999)}"
 
-       #crea pedido
+        # Crea pedido CON LOS PRODUCTOS
         pedido = Pedidos.objects.create(
             codigo=codigo,
             cliente=cliente,
             estado='Procesado',
+            productos=carrito,  # Guarda el carrito completo
+            total=total
         )
 
+        # Limpiar carrito
         request.session['carrito'] = {}
 
-        messages.success(request, '¡Pedido realizado exitosamente!')
+        messages.success(request, '¡Pago realizado correctamente! Tu pedido ha sido procesado.')
         return redirect('ver_carrito')
 
     return redirect('ver_carrito')
@@ -358,3 +381,62 @@ def eliminar_del_carrito(request, codigo):
         messages.success(request, 'Producto eliminado del carrito.')
 
     return redirect('ver_carrito')
+
+def modificar_cantidad_carrito(request, codigo, accion):
+    """
+    Modifica la cantidad de un producto en el carrito
+    accion: 'aumentar' o 'disminuir'
+    """
+    carrito = request.session.get('carrito', {})
+    
+    if codigo in carrito:
+        if accion == 'aumentar':
+            carrito[codigo] += 1
+        elif accion == 'disminuir':
+            if carrito[codigo] > 1:
+                carrito[codigo] -= 1
+            else:
+                # Si la cantidad es 1 y se disminuye, eliminar del carrito
+                del carrito[codigo]
+                messages.success(request, 'Producto eliminado del carrito.')
+        
+        request.session['carrito'] = carrito
+    
+    return redirect('ver_carrito')
+
+@login_required
+def mis_pedidos(request):
+    """
+    Muestra los pedidos del cliente actual con detalles de productos
+    """
+    try:
+        cliente = Clientes.objects.get(user=request.user)
+        pedidos_raw = Pedidos.objects.filter(cliente=cliente).order_by('-fecha')
+        
+        # Procesar cada pedido para obtener detalles de productos
+        pedidos = []
+        for pedido in pedidos_raw:
+            productos_detalle = []
+            for codigo, cantidad in pedido.productos.items():
+                try:
+                    producto = Productos.objects.get(codigo=codigo)
+                    productos_detalle.append({
+                        'producto': producto,
+                        'cantidad': cantidad,
+                        'subtotal': float(producto.precio) * cantidad
+                    })
+                except Productos.DoesNotExist:
+                    pass
+            
+            pedidos.append({
+                'pedido': pedido,
+                'productos': productos_detalle
+            })
+            
+    except Clientes.DoesNotExist:
+        pedidos = []
+        messages.warning(request, 'No tienes un perfil de cliente registrado.')
+    
+    return render(request, 'mis_pedidos.html', {
+        'pedidos': pedidos
+    })

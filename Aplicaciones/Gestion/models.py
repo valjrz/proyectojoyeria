@@ -53,10 +53,13 @@ class Pedidos(models.Model):
         ('Enviado', 'Enviado'),
         ('Entregado', 'Entregado')
     ], default='Pendiente')
-
+    # NUEVOS CAMPOS
+    productos = models.JSONField(default=dict, blank=True)  # Guarda {codigo: cantidad}
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+ 
     def __str__(self):
         return f"Pedido {self.codigo} - {self.cliente.nombre}"
-
+ 
     class Meta:
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"

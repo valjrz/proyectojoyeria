@@ -98,6 +98,7 @@
 
         <div class="d-flex">
           {% if user.is_authenticated %}
+            <a href="{% url 'mis_pedidos' %}" class="nav-link">Mis Pedidos</a>
             <a href="{% url 'logout' %}" class="nav-link">Cerrar sesión</a>
           {% else %}
             <a href="{% url 'login' %}" class="nav-link">Iniciar sesión</a>
@@ -105,19 +106,17 @@
           {% endif %}
           <form method="post" action="{% url 'ver_carrito' %}">
             {% csrf_token %}
-            <button type="submit" class="icono bg-transparent border-0" style="font-size: 1.4rem;">
-              🛍️
-              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary"></span>
-            </button>
+            <button type="submit" class="icono bg-transparent border-0 d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
           </form>
         </div>
       </div>
     </div>
   </nav>
-
-  <main class="container my-4">
-    {% block body %}{% endblock %}
-  </main>
 
   {% if messages %}
   <div class="container mt-3">
@@ -129,6 +128,10 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  <main class="container my-4">
+    {% block body %}{% endblock %}
+  </main>
 
   <footer class="top-banner mt-auto">
     <p class="text-center text-white mb-0">© 2025, aura joyería</p>

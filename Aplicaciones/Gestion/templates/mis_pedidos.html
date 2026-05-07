@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Mis Pedidos{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+  <h2 class="mb-4">Mis Pedidos</h2>
+
+  {% if pedidos %}
+    {% for item in pedidos %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header" style="background-color: #DFD3C3;">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-1">Pedido #{{ item.pedido.codigo }}</h5>
+            <small class="text-muted">{{ item.pedido.fecha|date:"d/m/Y H:i" }}</small>
+          </div>
+          <span class="badge 
+            {% if item.pedido.estado == 'Procesado' %}bg-info
+            {% elif item.pedido.estado == 'Enviado' %}bg-primary
+            {% elif item.pedido.estado == 'Entregado' %}bg-success
+            {% else %}bg-secondary{% endif %}" 
+            style="font-size: 0.9rem; padding: 8px 12px;">
+            {{ item.pedido.estado }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- PRODUCTOS DEL PEDIDO -->
+        <h6 class="mb-3">Productos:</h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prod in item.productos %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    {% if prod.producto.imagen %}
+                    <img src="{{ prod.producto.imagen.url }}" 
+                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                    {% endif %}
+                    <span>{{ prod.producto.nombre }}</span>
+                  </div>
+                </td>
+                <td>${{ prod.producto.precio }}</td>
+                <td>{{ prod.cantidad }}</td>
+                <td><strong>${{ prod.subtotal }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <hr>
+
+        <!-- TOTAL -->
+        <div class="d-flex justify-content-end">
+          <h5 style="color: #8D493A;">Total: ${{ item.pedido.total }}</h5>
+        </div>
+
+        <!-- ESTADO DESCRIPTIVO -->
+        <div class="alert alert-light mt-3 mb-0">
+          <strong>Estado:</strong>
+          {% if item.pedido.estado == 'Procesado' %}
+            Tu pedido está siendo preparado
+          {% elif item.pedido.estado == 'Enviado' %}
+            Tu pedido está en camino
+          {% elif item.pedido.estado == 'Entregado' %}
+            Tu pedido ha sido entregado
+          {% else %}
+            {{ item.pedido.estado }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="text-center py-5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" class="mb-3">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+      </svg>
+      <h4 class="text-muted mb-3">No tienes pedidos todavía</h4>
+      <p class="text-muted">Cuando realices una compra, tus pedidos aparecerán aquí</p>
+      <a href="{% url 'home_ecommerce' %}" class="btn mt-3" style="background-color: #8D493A; color: white; border: none;">
+        Ver productos
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  .card {
+    border: none;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+    padding: 15px 20px;
+  }
+
+  .badge {
+    border-radius: 8px;
+  }
+
+  .table th {
+    border-top: none;
+    color: #666;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .table td {
+    vertical-align: middle;
+  }
+</style>
+{% endblock %}
